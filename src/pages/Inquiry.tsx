@@ -81,9 +81,10 @@ const Inquiry: React.FC = () => {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
     const path = 'inquiries';
     try {
@@ -94,17 +95,9 @@ const Inquiry: React.FC = () => {
         status: 'new',
       });
       setIsSuccess(true);
-      setFormData({
-        businessName: '',
-        name: '',
-        phone: '',
-        city: '',
-        requirement: 'Less than 100 bags',
-        message: '',
-      });
-      setSelectedCategories([]);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, path);
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      setSubmitError(`Submission failed: ${error.message || 'Unknown error'}. Please ensure you have published the security rules in Firebase Console.`);
     } finally {
       setIsSubmitting(false);
     }

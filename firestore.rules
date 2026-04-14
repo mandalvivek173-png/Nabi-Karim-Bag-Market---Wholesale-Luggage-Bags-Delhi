@@ -1,94 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: inquiries
-    // Document ID: auto-generated
-    // Fields:
-    //   - name: string (required, 2-100 chars)
-    //   - phone: string (required, 10-15 chars)
-    //   - businessName: string (optional)
-    //   - city: string (optional)
-    //   - requirement: string (optional)
-    //   - message: string (required, 1-2000 chars)
-    //   - categories: list (optional)
-    //   - createdAt: timestamp (required)
-    //   - status: string (required, enum: ['new', 'contacted', 'closed'])
-    //
-    // ===============================================================
-
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
-    
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         (request.auth.token.email == "mandalvivek173@gmail.com" && request.auth.token.email_verified == true));
-    }
-
-    function isValidInquiry(data) {
-      let requiredFields = ['name', 'phone', 'message', 'createdAt', 'status'];
-      let allowedFields = ['name', 'phone', 'message', 'createdAt', 'status', 'businessName', 'city', 'requirement', 'categories'];
-      
-      return data.keys().hasAll(requiredFields) &&
-             data.keys().hasOnly(allowedFields) &&
-             data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
-             data.phone is string && data.phone.size() >= 10 && data.phone.size() <= 15 &&
-             data.message is string && data.message.size() >= 1 && data.message.size() <= 2000 &&
-             data.createdAt is timestamp &&
-             data.status in ['new', 'contacted', 'closed'] &&
-             (!('businessName' in data) || (data.businessName is string && data.businessName.size() <= 200)) &&
-             (!('city' in data) || (data.city is string && data.city.size() <= 100)) &&
-             (!('requirement' in data) || (data.requirement is string && data.requirement.size() <= 100)) &&
-             (!('categories' in data) || (data.categories is list && data.categories.size() <= 20));
-    }
-
-    function isValidContact(data) {
-      let requiredFields = ['name', 'phone', 'message', 'createdAt', 'status'];
-      let allowedFields = ['name', 'phone', 'message', 'createdAt', 'status', 'email', 'subject'];
-      
-      return data.keys().hasAll(requiredFields) &&
-             data.keys().hasOnly(allowedFields) &&
-             data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
-             data.phone is string && data.phone.size() >= 10 && data.phone.size() <= 15 &&
-             data.message is string && data.message.size() >= 1 && data.message.size() <= 2000 &&
-             data.createdAt is timestamp &&
-             data.status in ['new', 'read', 'replied'] &&
-             (!('email' in data) || (data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))) &&
-             (!('subject' in data) || (data.subject is string && data.subject.size() <= 200));
-    }
-
-    // ===============================================================
-    // Rules
-    // ===============================================================
-
     match /inquiries/{inquiryId} {
-      // Allow anyone to submit an inquiry
-      allow create: if isValidInquiry(request.resource.data);
-      
-      // Only admins can read, update, or delete inquiries
-      allow read, update, delete: if isAdmin();
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
     }
-
     match /contacts/{contactId} {
-      // Allow anyone to submit a contact form
-      allow create: if isValidContact(request.resource.data);
-      
-      // Only admins can read, update, or delete contacts
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /users/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      allow write: if isAdmin();
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
     }
   }
 }

@@ -73,9 +73,10 @@ const Contact: React.FC = () => {
     message: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
     const path = 'contacts';
     try {
@@ -85,15 +86,9 @@ const Contact: React.FC = () => {
         status: 'new',
       });
       setIsSuccess(true);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, path);
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      setSubmitError(`Submission failed: ${error.message || 'Unknown error'}. Please ensure you have published the security rules in Firebase Console.`);
     } finally {
       setIsSubmitting(false);
     }
